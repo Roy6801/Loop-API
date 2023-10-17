@@ -1,0 +1,5 @@
+*.vscode
+*__pycache__
+
+api/data/*
+api/src/db.sqlite3
