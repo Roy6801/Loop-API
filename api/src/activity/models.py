@@ -17,7 +17,7 @@ class Activity(models.Model):
         ((STATUS_INACTIVE := "inactive"), "INACTIVE"),
     ]
 
-    store_id = models.ForeignKey(TimeZone, on_delete=models.PROTECT)
+    store_id = models.CharField(max_length=255)
     timestamp_utc = models.CharField(max_length=255)
     status = models.CharField(
         max_length=10, choices=STATUS_CHOICES, default=STATUS_ACTIVE
@@ -36,7 +36,7 @@ class BusinessHour(models.Model):
         ((SUNDAY := 6), "Sun"),
     ]
 
-    store_id = models.ForeignKey(TimeZone, on_delete=models.PROTECT)
+    store_id = models.CharField(max_length=255)
     day_of_week = models.SmallIntegerField(choices=WEEK_DAY_CHOICES, db_index=True)
     start_time_local = models.CharField(max_length=255)
     end_time_local = models.CharField(max_length=255)
