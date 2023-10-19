@@ -6,7 +6,7 @@ from typing import *
 
 # Business Timezones Listed
 class TimeZone(models.Model):
-    store_id = models.CharField(max_length=255, primary_key=True)
+    store_id = models.CharField(max_length=255)
     timezone_str = models.CharField(max_length=255)
 
 
@@ -18,10 +18,10 @@ class Activity(models.Model):
     ]
 
     store_id = models.CharField(max_length=255)
-    timestamp_utc = models.CharField(max_length=255)
     status = models.CharField(
         max_length=10, choices=STATUS_CHOICES, default=STATUS_ACTIVE
     )
+    timestamp_utc = models.DateTimeField(auto_now_add=True)
 
 
 # Business Hours from Monday (0) to Sunday (6)
@@ -38,8 +38,8 @@ class BusinessHour(models.Model):
 
     store_id = models.CharField(max_length=255)
     day_of_week = models.SmallIntegerField(choices=WEEK_DAY_CHOICES, db_index=True)
-    start_time_local = models.CharField(max_length=255)
-    end_time_local = models.CharField(max_length=255)
+    start_time_local = models.TimeField()
+    end_time_local = models.TimeField()
 
 
 # Report Tracking
