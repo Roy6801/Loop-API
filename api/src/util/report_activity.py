@@ -1,6 +1,9 @@
-from .functions import get_local_time
 from datetime import datetime
 from .store import Store
+import pytz
+
+
+TIME_FORMAT = "%H:%M:%S"
 
 
 class ReportActivity:
@@ -23,74 +26,55 @@ class ReportActivity:
                 "Store object lacks data! Set store attributes for uptime/downtime calculation!"
             )
 
+        monitor_start_time = monitor_start_time.astimezone(self.store.timezone)
+        monitor_end_time = monitor_end_time.astimezone(self.store.timezone)
+
         activities = list(activity_list)
         length = len(activity_list)
 
-        previous_day_of_week: int = None
+        previous_weekday: int = None
         business_start_time: datetime = None
         business_end_time: datetime = None
-
-        checkpoint_time: datetime = None
-
-        DAY_NUM = {
-            "Monday": 0,
-            "Tuesday": 1,
-            "Wednesday": 2,
-            "Thursday": 3,
-            "Friday": 4,
-            "Saturday": 5,
-            "Sunday": 6,
-        }
-
-        TIME_FORMAT = "%H:%M:%S"
 
         uptime: int = 0
         downtime: int = 0
 
-        monitor_start_time = self.store.timezone.localize(monitor_start_time)
-        monitor_end_time = self.store.timezone.localize(monitor_end_time)
-
         for index, activity in enumerate(activities):
             # print("ACTIVITY TIME", activity, activity.status, activity.timestamp_utc)
-            local_time = get_local_time(activity.timestamp_utc, self.store.timezone)
-            day_of_week = DAY_NUM[local_time.strftime("%A")]
-            date_obj = local_time.date()
+            local_datetime = activity.timestamp_utc.astimezone(self.store.timezone)
 
-            if day_of_week != previous_day_of_week:
-                previous_day_of_week = day_of_week
-                business_hours = self.store.local_business_hours[day_of_week]
-                business_start_hours = datetime.strptime(
+            local_week_day = local_datetime.weekday()
+            local_time = local_datetime.time()
+
+            if local_week_day != previous_weekday:
+                previous_weekday = local_week_day
+                business_hours = self.store.local_business_hours[local_week_day]
+                business_start_time = datetime.strptime(
                     business_hours[0], TIME_FORMAT
                 ).time()
-                business_end_hours = datetime.strptime(
+                business_end_time = datetime.strptime(
                     business_hours[1], TIME_FORMAT
                 ).time()
 
-                start_obj = datetime.combine(date_obj, business_start_hours)
-                end_obj = datetime.combine(date_obj, business_end_hours)
-
-                business_start_time = self.store.timezone.localize(start_obj)
-                business_end_time = self.store.timezone.localize(end_obj)
-
-                checkpoint_time = min(monitor_end_time, business_end_time)
                 start_time = max(monitor_start_time, business_start_time)
+                end_time = min(monitor_end_time, business_end_time)
 
-            if start_time <= local_time <= checkpoint_time:
-                print(start_time, local_time, checkpoint_time)
-                difference = (checkpoint_time - local_time).seconds
+            if start_time <= local_time <= end_time:
+                print(start_time, local_time, end_time)
+                difference = (end_time - local_time).second
                 if activity.status == "active":
                     uptime += difference
                 else:
                     downtime += difference
 
-                checkpoint_time = local_time
+                end_time = local_time
 
-                if index == length - 1:
-                    difference = (local_time - monitor_start_time).seconds
-                    if activity.status == "active":
-                        uptime += difference
-                    else:
-                        downtime += difference
+                # if index == length - 1:
+                #     difference = (local_time - monitor_start_time).second
+                #     if activity.status == "active":
+                #         uptime += difference
+                #     else:
+                #         downtime += difference
 
         return uptime, downtime
 

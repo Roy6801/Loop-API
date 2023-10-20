@@ -1,7 +1,6 @@
 from activity.models import Activity, BusinessHour, TimeZone
 from datetime import datetime, timedelta
 from typing import Generator, Any
-import pytz
 
 
 def get_stores() -> Generator[str, Any, None]:
@@ -22,12 +21,6 @@ def get_stores() -> Generator[str, Any, None]:
             yield store_id
 
     return combined_store_ids()
-
-
-def get_local_time(utc_time, local_timezone):
-    local_time = utc_time.replace(tzinfo=pytz.UTC).astimezone(local_timezone)
-
-    return local_time
 
 
 def get_last_hour(input_datetime: datetime):
