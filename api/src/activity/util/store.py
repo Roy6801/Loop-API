@@ -1,5 +1,4 @@
 from activity.models import Activity, BusinessHour, TimeZone
-from datetime import datetime
 import pytz
 
 

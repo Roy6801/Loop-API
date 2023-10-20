@@ -1,6 +1,11 @@
 from activity.models import Activity, BusinessHour, TimeZone
 from datetime import datetime, timedelta
 from typing import Generator, Any
+import uuid
+
+
+def generate_unique_report_id():
+    return str(uuid.uuid4())
 
 
 def get_stores() -> Generator[str, Any, None]:
@@ -21,6 +26,10 @@ def get_stores() -> Generator[str, Any, None]:
             yield store_id
 
     return combined_store_ids()
+
+
+def get_local_time(utc_time: datetime, timezone):
+    return utc_time.astimezone(timezone)
 
 
 def get_last_hour(input_datetime: datetime):

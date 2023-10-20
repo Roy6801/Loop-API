@@ -47,9 +47,8 @@ class Report(models.Model):
     STATUS_CHOICES = [
         ((STATUS_RUNNING := 0), "Running"),
         ((STATUS_COMPLETE := 1), "Complete"),
+        ((STATUS_FAILED := 2), "Failed"),
     ]
 
     report_id = models.CharField(max_length=255, primary_key=True)
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=STATUS_RUNNING)
-    created_time = models.DateTimeField(auto_now_add=True)
-    generated_time = models.DateTimeField(auto_now=True)
