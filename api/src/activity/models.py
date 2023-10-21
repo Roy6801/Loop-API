@@ -51,5 +51,7 @@ class Report(models.Model):
     ]
 
     report_id = models.CharField(max_length=255, primary_key=True)
-    status = models.SmallIntegerField(choices=STATUS_CHOICES, default=STATUS_RUNNING)
+    status = models.CharField(
+        max_length=8, choices=STATUS_CHOICES, default=STATUS_RUNNING
+    )
     created_at = models.DateTimeField(auto_now_add=True)
