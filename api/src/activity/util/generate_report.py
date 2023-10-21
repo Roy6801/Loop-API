@@ -1,33 +1,35 @@
-from .functions import generate_unique_report_id
 from activity.models import Report
 import pandas as pd
+import uuid
 
 
-class GenerateReport:
-    def __init__(self) -> None:
-        self.__data = []
-        self.__report_id = generate_unique_report_id()
+def get_report_id():
+    report_id = str(uuid.uuid4())
+    report = Report(report_id=report_id)
+    report.save()
+    return report_id
 
-    def add_store_activity_report(self, report_data):
-        self.__data.append(report_data)
 
-    def save_report_file(self, dirpath="./report"):
-        df = pd.DataFrame(
-            self.__data,
-            columns=[
-                "store_id",
-                "uptime_last_hour",
-                "uptime_last_day",
-                "uptime_last_week",
-                "downtime_last_hour",
-                "downtime_last_day",
-                "downtime_last_week",
-            ],
-        )
+def save_report_file(report_id, report_data, dirpath="./report"):
+    df = pd.DataFrame(
+        report_data,
+        columns=[
+            "store_id",
+            "uptime_last_hour",
+            "uptime_last_day",
+            "uptime_last_week",
+            "downtime_last_hour",
+            "downtime_last_day",
+            "downtime_last_week",
+        ],
+    )
+    report = Report.objects.filter(report_id=report_id)
+    try:
+        df.to_csv(f"{dirpath}/{report_id}.csv", index=False)
+        report.update(status=Report.STATUS_COMPLETE)
+    except Exception:
+        report.update(status=Report.STATUS_FAILED)
 
-        df.to_csv(f"{dirpath}/{self.__report_id}.csv", index=False)
 
-    def get_report_id(self):
-        report = Report(report_id=self.__report_id)
-        report.save()
-        return self.__report_id
+def fetch_report_file(report_id, dirpath="./report"):
+    pass

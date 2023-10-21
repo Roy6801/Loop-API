@@ -1,7 +1,9 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from util.generate_report import GenerateReport
+from .util.generate_report import get_report_id
 from .tasks import trigger_report_generation
+from django.http import HttpResponse
+from rest_framework import status
 from .models import Report
 
 # Create your views here.
@@ -9,13 +11,29 @@ from .models import Report
 
 @api_view()
 def trigger_report(request):
-    report_generator = GenerateReport()
-    report_id = report_generator.get_report_id()
-    trigger_report_generation.delay(report_generator)
+    report_id = get_report_id()
+    print(report_id)
+    trigger_report_generation.delay(report_id)
     return Response(report_id)
 
 
 @api_view()
-def get_report(request):
-    status = Report.objects.filter(report_id=request.report_id)
-    return Response(status)
+def get_report(request, report_id):
+    report = Report.objects.filter(report_id=report_id).first()
+    if report is None:
+        return Response(
+            {"detail": "Report not found!"}, status=status.HTTP_404_NOT_FOUND
+        )
+
+    response_data = {
+        "status": report.status,
+    }
+    if report.status == Report.STATUS_COMPLETE:
+        response = HttpResponse(content_type="text/csv")
+        response[
+            "Content-Disposition"
+        ] = f'attachment; filename="report/{report_id}.csv"'
+
+        response_data["report"] = response.content
+
+    return Response(response_data)

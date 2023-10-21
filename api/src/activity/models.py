@@ -45,10 +45,11 @@ class BusinessHour(models.Model):
 # Report Tracking
 class Report(models.Model):
     STATUS_CHOICES = [
-        ((STATUS_RUNNING := 0), "Running"),
-        ((STATUS_COMPLETE := 1), "Complete"),
-        ((STATUS_FAILED := 2), "Failed"),
+        ((STATUS_RUNNING := "Running"), "Running"),
+        ((STATUS_COMPLETE := "Complete"), "Complete"),
+        ((STATUS_FAILED := "Failed"), "Failed"),
     ]
 
     report_id = models.CharField(max_length=255, primary_key=True)
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=STATUS_RUNNING)
+    created_at = models.DateTimeField(auto_now_add=True)

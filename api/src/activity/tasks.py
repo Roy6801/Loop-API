@@ -1,6 +1,6 @@
 from .util.functions import get_stores, get_last_hour, get_last_day, get_last_week
 from .util.activity_report import ActivityReport
-from .util.generate_report import GenerateReport
+from .util.generate_report import save_report_file
 from celery import shared_task
 from datetime import datetime
 from .util.store import Store
@@ -8,8 +8,8 @@ import pytz
 
 
 @shared_task
-def trigger_report_generation(report_generator: GenerateReport):
-    TEST_LIMIT = 10  # store count
+def trigger_report_generation(report_id: str):
+    TEST_LIMIT = 3  # store count
 
     CURRENT_TIMESTAMP = "2023-01-25 18:13:22.47922 UTC"
     DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f %Z"
@@ -20,6 +20,7 @@ def trigger_report_generation(report_generator: GenerateReport):
     # Aware UTC Time
     CURRENT_TIME_UTC = pytz.utc.localize(parsed_time)
 
+    report_data = []
     seen = set()
 
     last_hour_utc = get_last_hour(CURRENT_TIME_UTC)
@@ -35,16 +36,16 @@ def trigger_report_generation(report_generator: GenerateReport):
         if store_id in seen:
             continue
 
-        print(CURRENT_TIME_UTC, last_hour_utc, last_day_utc, last_week_utc)
+        # print(CURRENT_TIME_UTC, last_hour_utc, last_day_utc, last_week_utc)
 
         store = Store(store_id=store_id)
-        print("Store ID", store.id)
+        # print("Store ID", store.id)
 
         store.set_timezone()
-        print("TimeZone", store.timezone)
+        # print("TimeZone", store.timezone)
 
         store.set_local_business_hours()
-        print(store.local_business_hours)
+        # print(store.local_business_hours)
 
         store.set_activity_list(start_time=last_week_utc, end_time=CURRENT_TIME_UTC)
         # print("All activities in a week", store.activities)
@@ -55,8 +56,8 @@ def trigger_report_generation(report_generator: GenerateReport):
             CURRENT_TIME_UTC, last_hour_utc, last_day_utc, last_week_utc
         )
 
-        report_generator.add_store_activity_report(report_data=report.get_result())
+        report_data.append(report.get_result())
 
         seen.add(store_id)
 
-    report_generator.save_report_file()
+    save_report_file(report_id=report_id, report_data=report_data)

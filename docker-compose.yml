@@ -1,0 +1,43 @@
+version: "3"
+services:
+  django:
+    build:
+      context: .
+    container_name: django-app
+    ports:
+      - "8000:8000"
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./api/src:/app
+    environment:
+      - DEBUG=True
+    depends_on:
+      - redis
+
+  celery:
+    build:
+      context: .
+    container_name: celery-worker
+    command: celery -A core worker --loglevel=info
+    volumes:
+      - ./api/src:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings
+      - DEBUG=False
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - FLOWER_PORT=5555
+    depends_on:
+      - redis
+  flower:
+    build: .
+    command: celery --broker=redis://redis:6379/1 flower --port=5555
+    depends_on:
+      - redis
+    ports:
+      - "5555:5555"
+
+  redis:
+    image: redis:latest
+    container_name: redis-broker
+    ports:
+      - "6379:6379"

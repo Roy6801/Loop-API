@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-csn^(de=d^=99t6v)97d_^@m+(-5suq&7gqaakc#%!t8809m!e
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -124,4 +124,4 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CELERY_BROKER_URL = "redis://localhost:6379/1"
+CELERY_BROKER_URL = "redis://redis:6379/1"

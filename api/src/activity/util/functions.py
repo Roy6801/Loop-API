@@ -1,11 +1,6 @@
 from activity.models import Activity, BusinessHour, TimeZone
 from datetime import datetime, timedelta
 from typing import Generator, Any
-import uuid
-
-
-def generate_unique_report_id():
-    return str(uuid.uuid4())
 
 
 def get_stores() -> Generator[str, Any, None]:

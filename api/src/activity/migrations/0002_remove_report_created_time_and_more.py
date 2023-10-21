@@ -4,23 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('activity', '0001_initial'),
+        ("activity", "0001_initial"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='report',
-            name='created_time',
+            model_name="report",
+            name="created_time",
         ),
         migrations.RemoveField(
-            model_name='report',
-            name='generated_time',
+            model_name="report",
+            name="generated_time",
         ),
         migrations.AlterField(
-            model_name='report',
-            name='status',
-            field=models.SmallIntegerField(choices=[(0, 'Running'), (1, 'Complete'), (2, 'Failed')], default=0),
+            model_name="report",
+            name="status",
+            field=models.SmallIntegerField(
+                choices=[(0, "Running"), (1, "Complete"), (2, "Failed")], default=0
+            ),
         ),
     ]
