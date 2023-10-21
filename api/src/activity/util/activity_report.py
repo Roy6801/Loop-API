@@ -18,13 +18,8 @@ class ActivityReport:
         self.downtime_last_week = 0
 
     def calculate_uptime_downtime(
-        self, current_time_utc, last_hour_utc, last_day_utc, last_week_utc
+        self, current_time_local, last_hour_local, last_day_local, last_week_local
     ):
-        current_time_local = get_local_time(current_time_utc, self.store.timezone)
-        last_hour_local = get_local_time(last_hour_utc, self.store.timezone)
-        last_day_local = get_local_time(last_day_utc, self.store.timezone)
-        last_week_local = get_local_time(last_week_utc, self.store.timezone)
-
         checkpoint_time = None
         checkpoint_date = None
 
