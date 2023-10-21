@@ -69,7 +69,7 @@ def trigger_report_generation(report_id: str):
                 last_week_local,
             )
 
-        report.calculate_uptime_downtime(**local_times[timezone_str])
+        report.calculate_uptime_downtime(*local_times[timezone_str])
 
         report_data.append(report.get_result())
 
