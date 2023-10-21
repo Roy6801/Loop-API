@@ -18,13 +18,14 @@ services:
     build:
       context: .
     container_name: celery-worker
-    command: celery -A core worker --loglevel=info
+    command: celery -A core worker -l info --concurrency=6
     volumes:
       - ./api/src:/app
     environment:
       - DJANGO_SETTINGS_MODULE=core.settings
       - DEBUG=False
       - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
       - FLOWER_PORT=5555
     depends_on:
       - redis

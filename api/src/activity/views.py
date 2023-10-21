@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .util.generate_report import get_report_id
-from .tasks import trigger_report_generation
+from .util.functions import get_report_id
+from .util.handler import trigger_report_generation
 from django.http import HttpResponse
 from rest_framework import status
 from .models import Report
@@ -12,8 +12,7 @@ from .models import Report
 @api_view()
 def trigger_report(request):
     report_id = get_report_id()
-    print(report_id)
-    trigger_report_generation.delay(report_id)
+    trigger_report_generation(report_id)
     return Response(report_id)
 
 
