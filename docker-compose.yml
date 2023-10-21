@@ -18,7 +18,7 @@ services:
     build:
       context: .
     container_name: celery-worker
-    command: celery -A core worker -l info --concurrency=6
+    command: celery -A core worker -l info --concurrency=5
     volumes:
       - ./api/src:/app
     environment:

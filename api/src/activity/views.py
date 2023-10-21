@@ -12,7 +12,7 @@ from .models import Report
 @api_view()
 def trigger_report(request):
     report_id = get_report_id()
-    trigger_report_generation(report_id)
+    trigger_report_generation(report_id, batch_size=10)
     return Response(report_id)
 
 
