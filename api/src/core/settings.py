@@ -124,5 +124,17 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis:6379/0",
+        "TIMEOUT": 10 * 60,  # 10 mins
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
+
 CELERY_BROKER_URL = "redis://redis:6379/1"
 CELERY_RESULT_BACKEND = "redis://redis:6379/2"

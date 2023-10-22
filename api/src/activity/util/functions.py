@@ -11,24 +11,14 @@ def get_report_id():
     return report_id
 
 
-def get_stores() -> Generator[str, Any, None]:
-    field = "store_id"
+def get_stores(last_week_utc) -> Generator[str, Any, None]:
+    stores = (
+        Activity.objects.filter(timestamp_utc__gt=last_week_utc)
+        .values_list("store_id", flat=True)
+        .distinct()
+    )
 
-    store_ids_activity = Activity.objects.values_list(field, flat=True).distinct()
-    store_ids_business_hours = BusinessHour.objects.values_list(
-        field, flat=True
-    ).distinct()
-    store_ids_timezones = TimeZone.objects.values_list(field, flat=True).distinct()
-
-    def combined_store_ids():
-        for store_id in store_ids_timezones:
-            yield store_id
-        for store_id in store_ids_business_hours:
-            yield store_id
-        for store_id in store_ids_activity:
-            yield store_id
-
-    return combined_store_ids()
+    return stores
 
 
 def get_local_time(utc_time: datetime, timezone):

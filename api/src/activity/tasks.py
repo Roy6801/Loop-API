@@ -1,5 +1,6 @@
 from .util.activity_report import ActivityReport
 from .util.functions import get_local_time
+from django.core.cache import cache
 from activity.models import Report
 from celery import shared_task
 from .util.store import Store
@@ -15,7 +16,6 @@ def process_batch(
     last_week_utc,
 ):
     report_data = []
-    local_times = {}
 
     for store_id in batch_of_stores:
         store_id = store_id.strip()
@@ -38,20 +38,23 @@ def process_batch(
 
         timezone_str = str(store.timezone)
 
-        if timezone_str not in local_times:
+        if cache.get(timezone_str) is None:
             current_time_local = get_local_time(current_time_utc, store.timezone)
             last_hour_local = get_local_time(last_hour_utc, store.timezone)
             last_day_local = get_local_time(last_day_utc, store.timezone)
             last_week_local = get_local_time(last_week_utc, store.timezone)
 
-            local_times[timezone_str] = (
-                current_time_local,
-                last_hour_local,
-                last_day_local,
-                last_week_local,
+            cache.set(
+                timezone_str,
+                (
+                    current_time_local,
+                    last_hour_local,
+                    last_day_local,
+                    last_week_local,
+                ),
             )
 
-        report.calculate_uptime_downtime(*local_times[timezone_str])
+        report.calculate_uptime_downtime(*cache.get(timezone_str))
 
         report_data.append(report.get_result())
 
