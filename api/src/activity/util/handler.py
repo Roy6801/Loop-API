@@ -21,7 +21,7 @@ def trigger_report_generation(report_id: str, batch_size=4):
     last_day_utc = get_last_day(CURRENT_TIME_UTC)
     last_week_utc = get_last_week(CURRENT_TIME_UTC)
 
-    stores = get_stores(last_week_utc)[:50]
+    stores = get_stores(last_week_utc)
     num_stores = len(stores)
     # print("NUM STORES", num_stores)
 
