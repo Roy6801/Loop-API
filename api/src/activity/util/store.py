@@ -1,25 +1,30 @@
 from activity.models import Activity, BusinessHour, TimeZone
+from django.db.models.manager import BaseManager
+from typing import Dict, Tuple
+from datetime import datetime
 import pytz
 
 
 class Store:
-    def __init__(self, store_id):
-        self.id = store_id
-        self.timezone = None
-        self.local_business_hours = None
-        self.activities = None
+    def __init__(self, store_id: str):
+        self.id: str = store_id
+        self.timezone: pytz.BaseTzInfo
+        self.local_business_hours: Dict[int, Tuple[str, str]]
+        self.activities: BaseManager[Activity]
 
     def set_timezone(self):
-        timezone = TimeZone.objects.filter(store_id=self.id).first()
+        timezone_obj = TimeZone.objects.filter(store_id=self.id).first()
 
         self.timezone = (
             pytz.timezone("America/Chicago")
-            if timezone is None
-            else pytz.timezone(timezone.timezone_str)
+            if timezone_obj is None
+            else pytz.timezone(timezone_obj.timezone_str)
         )
 
     def set_local_business_hours(self):
-        hours = {}
+        hours: Dict[int, Tuple[str, str]] = {}
+        business_hour: BusinessHour | None
+        day: int
 
         for day in range(7):
             business_hour = BusinessHour.objects.filter(
@@ -36,7 +41,7 @@ class Store:
 
         self.local_business_hours = hours
 
-    def set_activity_list(self, start_time, end_time):
+    def set_activity_list(self, start_time: datetime, end_time: datetime):
         self.activities = (
             Activity.objects.filter(
                 store_id=self.id, timestamp_utc__range=(start_time, end_time)
