@@ -79,13 +79,30 @@ To run the project using Docker and Docker Compose, follow these steps:
    ```bash
    docker-compose up --build
    ```
-2. Access the Django application at http://localhost:8000.
+2. Access the Django application at `http://localhost:8000`.
 
-3. Use the `trigger_report_generation` function to generate store activity reports for a specific time frame.
+3. Use the `trigger_report_generation` function to generate store activity reports for a specific time frame. You can access this function at `http://localhost:8000/trigger_report`.
 
-4. Monitor Celery tasks and reports using Flower, which is accessible at http://localhost:5555.
+4. Retrieve a generated report by accessing the get_report endpoint at `http://localhost:8000/get_report/{report_id}`.
 
-5. The Celery workers use a prefork concurrency model, with each process handling a batch of store IDs concurrently. The batch size, specified as an argument in the `process_batch` function, represents the number of threads for concurrent store ID processing with subtasks.
+Response Type: JSON
+Response Schema:
+
+```json
+{
+  "status": "report_status",
+  "report": "downloadable_report_url (get_report_file endpoint)"
+}
+```
+
+5. Download the report file by accessing the get_report_file endpoint at `http://localhost:8000/get_report_file/{report_id}`.
+
+Response Type: CSV File
+Response Schema: CSV file containing store activity report.
+
+6. Monitor Celery tasks and reports using Flower, which is accessible at `http://localhost:5555`.
+
+7. The Celery workers use a prefork concurrency model, with each process handling a batch of store IDs concurrently. The batch size, specified as an argument in the `process_batch` function, represents the number of threads for concurrent store ID processing with subtasks.
 
 ### Example Usage
 
