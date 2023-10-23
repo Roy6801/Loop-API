@@ -18,7 +18,7 @@ services:
     build:
       context: .
     container_name: celery-worker
-    command: celery -A core worker -l info --concurrency=5
+    command: celery -A core worker -l info --concurrency=5 -P prefork
     volumes:
       - ./api/src:/app
     environment:

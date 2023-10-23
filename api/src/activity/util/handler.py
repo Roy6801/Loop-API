@@ -13,7 +13,15 @@ if typing.TYPE_CHECKING:
 
 
 def trigger_report_generation(report_id: str, batch_size: int = 4) -> None:
-    tasks: List[Signature] = []
+    """
+    Triggers the generation of store activity reports for a specified time.
+
+    Args:
+        report_id (str): The unique identifier for the generated report.
+        batch_size (int): The batch size for parallel processing of store data.
+    """
+
+    tasks: List[Signature]
 
     CURRENT_TIMESTAMP: str
     DATETIME_FORMAT: str
@@ -34,26 +42,31 @@ def trigger_report_generation(report_id: str, batch_size: int = 4) -> None:
 
     task_sign: Signature
 
+    tasks = []
+
+    # Define the current timestamp and datetime format for reference (Hard Coded for given static data)
     CURRENT_TIMESTAMP = "2023-01-25 18:13:22.47922 UTC"
     DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f %Z"
 
-    # Naive UTC Time
+    # Parse the current timestamp and convert it to UTC time
     parsed_time = datetime.strptime(CURRENT_TIMESTAMP, DATETIME_FORMAT)
-
-    # Aware UTC Time
     current_time_utc = pytz.utc.localize(parsed_time)
 
+    # Calculate the timestamps for the last hour, last day, and last week
     last_hour_utc = get_last_hour(current_time_utc)
     last_day_utc = get_last_day(current_time_utc)
     last_week_utc = get_last_week(current_time_utc)
 
+    # Retrieve a list of stores with recent activities
     stores = get_stores(last_week_utc)
     num_stores = len(stores)
-    # print("NUM STORES", num_stores)
 
+    # Split stores into batches for parallel processing
     for batch_start in range(0, num_stores, batch_size):
         batch_end = min(batch_start + batch_size, num_stores)
         batch = stores[batch_start:batch_end]
+
+        # Create a task signature for batch processing
         task_sign = process_batch.s(
             batch,
             current_time_utc,
@@ -63,4 +76,5 @@ def trigger_report_generation(report_id: str, batch_size: int = 4) -> None:
         )
         tasks.append(task_sign)
 
+    # Use a celery chord to execute batch processing and report file saving in parallel
     chord(tasks)(save_report_file.s(report_id))

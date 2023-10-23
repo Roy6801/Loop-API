@@ -20,7 +20,19 @@ def subtask(
     last_day_utc: datetime,
     last_week_utc: datetime,
 ) -> ReportResult:
-    """"""
+    """
+    Subtask for processing report data for a single store.
+
+    Args:
+        store_id (str): Identifier of the store to process.
+        current_time_utc (datetime): Current time in UTC.
+        last_hour_utc (datetime): Time one hour ago in UTC.
+        last_day_utc (datetime): Time 24 hours ago in UTC.
+        last_week_utc (datetime): Time one week ago in UTC.
+
+    Returns:
+        ReportResult: A tuple containing report data for the store.
+    """
 
     store: Store
     report: ActivityReport
@@ -29,25 +41,25 @@ def subtask(
 
     store_id = store_id.strip()
 
-    # print(CURRENT_TIME_UTC, last_hour_utc, last_day_utc, last_week_utc)
-
+    # Create a Store instance for the store.
     store = Store(store_id=store_id)
-    # print("Store ID", store.id)
 
+    # Set the store's timezone.
     store.set_timezone()
-    # print("TimeZone", store.timezone)
 
+    # Set the store's local business hours.
     store.set_local_business_hours()
-    # print(store.local_business_hours)
 
+    # Set the store's activity list within the specified time range.
     store.set_activity_list(start_time=last_week_utc, end_time=current_time_utc)
-    # print("All activities in a week", store.activities)
 
+    # Create an ActivityReport instance for the store.
     report = ActivityReport(store=store)
 
     timezone_str = str(store.timezone)
 
     if cache.get(timezone_str) is None:
+        # If the timezone information is not cached, calculate and cache it.
         current_time_local = get_local_time(current_time_utc, store.timezone)
         last_hour_local = get_local_time(last_hour_utc, store.timezone)
         last_day_local = get_local_time(last_day_utc, store.timezone)
@@ -63,8 +75,10 @@ def subtask(
             ),
         )
 
+    # Calculate and retrieve the store's uptime and downtime.
     report.calculate_uptime_downtime(*cache.get(timezone_str))
 
+    # Get the result containing uptime and downtime data.
     result = report.get_result()
 
     return result
@@ -77,17 +91,31 @@ def process_batch(
     last_hour_utc: datetime,
     last_day_utc: datetime,
     last_week_utc: datetime,
-) -> Iterator[ReportResult]:
-    """"""
+) -> List[ReportResult]:
+    """
+    Task for processing a batch of stores and generating report data.
 
-    report_data: List[ReportResult]
+    Args:
+        batch_of_stores (List[str]): List of store identifiers to process.
+        current_time_utc (datetime): Current time in UTC.
+        last_hour_utc (datetime): Time one hour ago in UTC.
+        last_day_utc (datetime): Time 24 hours ago in UTC.
+        last_week_utc (datetime): Time one week ago in UTC.
+
+    Returns:
+        List[ReportResult]: A list of report data for the batch of stores.
+    """
+
     pool: ThreadPoolExecutor
-    result: ReportResult
     results: Iterator[ReportResult]
+    report_data: List[ReportResult]
 
     report_data = []
+
+    # Create a thread pool with workers for parallel processing.
     pool = ThreadPoolExecutor(max_workers=len(batch_of_stores))
 
+    # Map the subtask function to the list of store IDs, performing the subtasks concurrently.
     results = pool.map(
         lambda x: subtask(*x),
         [
@@ -96,16 +124,28 @@ def process_batch(
         ],
     )
 
-    # for result in results:
-    #     report_data.append(result)
+    # Collect the results and store them in the report_data list.
+    report_data = list(results)
 
+    # Shut down the thread pool.
     pool.shutdown()
 
-    return results
+    return report_data
 
 
 @shared_task
-def save_report_file(results: Iterator[ReportResult], report_id: str):
+def save_report_file(results: List[List[ReportResult]], report_id: str) -> None:
+    """
+    Task for saving report data to a CSV file and updating the report status.
+
+    Args:
+        results (List[List[ReportResult]]): List of report data for multiple stores.
+        report_id (str): Identifier of the report.
+
+    Returns:
+        None
+    """
+
     csv_file_path: str
     report: BaseManager[Report]
     data: List[ReportResult]
@@ -114,11 +154,13 @@ def save_report_file(results: Iterator[ReportResult], report_id: str):
 
     data = []
 
-    # for result in results:
-    #     data.extend(result)
+    for result in results:
+        # Extend the data list with the report data for each store.
+        data.extend(result)
 
+    # Create a DataFrame from the report data.
     df = pd.DataFrame(
-        results,
+        data,
         columns=[
             "store_id",
             "uptime_last_hour",
@@ -133,7 +175,9 @@ def save_report_file(results: Iterator[ReportResult], report_id: str):
     report = Report.objects.filter(report_id=report_id)
 
     try:
+        # Write the report data to a CSV file and mark the report as complete.
         df.to_csv(csv_file_path, index=False)
         report.update(status=Report.STATUS_COMPLETE)
     except Exception:
+        # Mark the report as failed in case of an error.
         report.update(status=Report.STATUS_FAILED)
