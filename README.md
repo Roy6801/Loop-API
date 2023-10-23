@@ -9,7 +9,6 @@ This project is designed to generate store activity reports, calculating uptime 
 - [How It Works](#how-it-works)
 - [Usage](#usage)
 - [Dependencies](#dependencies)
-- [Time Complexity](#time-complexity)
 
 ## Introduction
 
